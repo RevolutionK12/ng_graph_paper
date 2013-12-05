@@ -1,4 +1,4 @@
-Copyright (c) 2013 krisfox
+Copyright (c) 2013 Revolution K12
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

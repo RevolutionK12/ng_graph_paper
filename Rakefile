@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "ng_graph_paper"
   gem.homepage = "http://github.com/krisfox/ng_graph_paper"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{AngularJS Graphing Paper tool}
+  gem.description = %Q{AngularJS Graphing Paper tool}
   gem.email = "krisfox@gmail.com"
   gem.authors = ["krisfox"]
   # dependencies defined in Gemfile
