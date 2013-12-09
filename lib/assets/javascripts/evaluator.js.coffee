@@ -74,6 +74,7 @@
       false
 
   evaluateAnswer: (answer) ->
+    console.log "in evaluate"
     isTriangle      = () => 
       @isTriangle()
     isRightTriangle = () =>

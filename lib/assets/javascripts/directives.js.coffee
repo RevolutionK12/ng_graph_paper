@@ -159,6 +159,7 @@ app.directive 'graphPaper', () ->
         _evaluate()
 
     $scope.$watch 'answer', () ->
+      console.log 'watching answer'
       _evaluate()
 
   ]
@@ -358,10 +359,12 @@ app.directive 'graphPaper', () ->
 
     _draw_background()
     scope.$watch 'settings.editing', ->
+      console.log 'settings.editing'
       if scope.settings.editing? and scope.settings.editing
         _drawOuterLabels()    
 
     scope.$watch 'settings.origin', ->
+      console.log 'settings.origin'
       if scope.settings.origin? && scope.settings.origin
         _drawAxis(scope.settings.origin, scope.settings.editing)
       else
@@ -373,6 +376,7 @@ app.directive 'graphPaper', () ->
           scope.circ.remove()
 
     scope.$watch 'settings.images', ->
+      console.log 'settings.images'
       if scope.settings.images and scope.settings.images.length != scope.image_set.length
         _draw_images() 
 
@@ -424,3 +428,5 @@ app.directive 'graphPaper', () ->
           _dragging = true
           snapped = _snap_to_grid(xy.x, xy.y)
           _current_line.dragging(snapped.x, snapped.y)
+
+    console.log 'at end'
