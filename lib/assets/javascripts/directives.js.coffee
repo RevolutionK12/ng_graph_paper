@@ -265,7 +265,7 @@ app.directive 'graphPaper', () ->
       for image in scope.settings.images
         img = new Image()
         img.onload = ->
-          pimage = paper.image img.src, image.x or padding, image.y or padding, img.width, img.height
+          pimage = paper.image img.src, image.x+padding or padding, image.y+padding or padding, img.width, img.height
           scope.image_set.push(pimage)
           if scope.settings.editing
             pimage.drag (dx, dy) ->
