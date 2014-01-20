@@ -5,25 +5,35 @@
 
 Gem::Specification.new do |s|
   s.name = "ng_graph_paper"
-  s.version = "0.0.1"
+  s.version = "1.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["krisfox"]
-  s.date = "2013-12-04"
+  s.date = "2014-01-20"
   s.description = "AngularJS Graphing Paper tool"
   s.email = "krisfox@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
+    "README.md",
     "README.rdoc"
   ]
   s.files = [
     ".document",
+    ".rvmrc",
     "Gemfile",
+    "Gemfile.lock",
     "LICENSE.txt",
+    "README.md",
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "lib/assets/javascripts/directives.js.coffee",
+    "lib/assets/javascripts/evaluator.js.coffee",
+    "lib/assets/javascripts/module.js.coffee",
+    "lib/assets/javascripts/ng_graph_paper.js",
     "lib/ng_graph_paper.rb",
+    "lib/ng_graph_paper/engine.rb",
+    "ng_graph_paper.gemspec",
     "test/helper.rb",
     "test/test_ng_graph_paper.rb"
   ]
