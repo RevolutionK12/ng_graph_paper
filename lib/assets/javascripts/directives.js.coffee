@@ -58,7 +58,7 @@ app.directive 'graphPaper', () ->
           <a class="btn btn-small" ng-click="toggleLineTool()" ng-class="{active: mode=='lining'}"><i class="icon-minus"></i> Line Tool</a>
         </div>
         <br />
-        <div class="canvas" ng-style="{cursor: (mode|cursor)}"></div>
+        <div class="canvas" ng-style="{cursor: (mode|cursor)}" style=""></div>
         <input type='hidden' ng-value="points_and_lines"/>
       </div>
     """
@@ -132,7 +132,7 @@ app.directive 'graphPaper', () ->
 
     _lines_to_s = ->
       ls = _.collect $scope.lines, (l) ->
-        "{'p1':[#{l.p1.attrs.cx-$scope.padding},#{l.p1.attrs.cy-$scope.padding}],'p2':[#{l.p2.attrs.cx-$scope.padding},#{l.p2.attrs.cy-$scope.padding}]}"
+        "{\"p1\":[#{l.p1.attrs.cx-$scope.padding},#{l.p1.attrs.cy-$scope.padding}],\"p2\":[#{l.p2.attrs.cx-$scope.padding},#{l.p2.attrs.cy-$scope.padding}]}"
       "[#{ls.join(',')}]"
 
     _points_to_s = ->
@@ -240,13 +240,13 @@ app.directive 'graphPaper', () ->
       height: padding*2+height+'px'
 
     paper  = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
-    glass  = null
+    glass  = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
     points = paper.set()
     scope.image_set = paper.set()
 
     _draw_background = ->
       set = paper.set()
-      #horizontal lines
+      # horizontal lines
       for Y in [gridSize..height] by gridSize
         path = paper.path "M #{padding} #{Y+padding} L #{width+padding} #{Y+padding}"
         set.push path
@@ -257,8 +257,7 @@ app.directive 'graphPaper', () ->
         stroke: '#ccccff'
         'stroke-width': '1'
       paper.rect(padding,padding,height,width).attr('stroke', '#000000')
-      glass = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'transparent')
-
+      
     _draw_images = ->
       scope.image_set.remove()
       scope.image_set.clear()
@@ -382,13 +381,14 @@ app.directive 'graphPaper', () ->
 
     scope.$on 'images_changed', ->
       _draw_images()
-
+      
     _get_x_y = (e) ->
       position = $('.canvas', element).offset()
       if TouchEvent? && (e instanceof TouchEvent)
         e = e.changedTouches[0]
       x: e.pageX - position.left
       y: e.pageY - position.top
+
 
     glass.drag (e) ->
       if scope.mode == 'lining' and _current_line?
@@ -428,5 +428,5 @@ app.directive 'graphPaper', () ->
           _dragging = true
           snapped = _snap_to_grid(xy.x, xy.y)
           _current_line.dragging(snapped.x, snapped.y)
-
+    console.log glass.click()
     console.log 'at end'

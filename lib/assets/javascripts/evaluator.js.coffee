@@ -37,7 +37,6 @@
         'undefined'
       else
         (line.p1[1] - line.p2[1]) / (line.p1[0] - line.p2[0])
-    console.log(sl)
     sl
 
   distance: (line) ->
@@ -74,7 +73,7 @@
       false
 
   evaluateAnswer: (answer) ->
-    console.log "in evaluate"
+    # console.log "in evaluate"
     isTriangle      = () => 
       @isTriangle()
     isRightTriangle = () =>
