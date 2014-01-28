@@ -372,7 +372,7 @@ app.directive 'graphPaper', () ->
           scope.axis.clear()
           scope.labels.remove()
           scope.labels.clear()
-          if settings.editing
+          if scope.settings.editing
             scope.circ.remove()
 
     scope.$watch 'settings.images', ->
