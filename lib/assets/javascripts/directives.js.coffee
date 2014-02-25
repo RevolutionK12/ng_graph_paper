@@ -39,7 +39,7 @@ class Line
   toString: ->
     "#{Math.min(@p1.id, @p2.id)}_#{Math.max(@p1.id, @p2.id)}"
 
-app.directive 'graphPaper', () ->
+app.directive 'graphPaper', ['$timeout', ($timeout) ->
   restrict: 'A'
   scope: 
     'width'    : '@'
@@ -56,6 +56,7 @@ app.directive 'graphPaper', () ->
           <a class="btn btn-small" ng-click="toggleDeleteTool()" ng-class="{active: mode=='deleting'}"><i class="icon-remove"></i> Delete</a>
           <a class="btn btn-small" ng-click="togglePointTool()" ng-class="{active: mode=='pointing'}"><i class="icon-hand-up"></i> Point Tool</a>
           <a class="btn btn-small" ng-click="toggleLineTool()" ng-class="{active: mode=='lining'}"><i class="icon-minus"></i> Line Tool</a>
+          <a class="btn btn-small" ng-click="reset()"> Reset</a>
         </div>
         <br />
         <div class="canvas" ng-style="{cursor: (mode|cursor)}" style=""></div>
@@ -154,16 +155,29 @@ app.directive 'graphPaper', () ->
           false
 
     _update = ->
-      $scope.$apply ->
-        $scope.model   = $scope.points_and_lines()
-        _evaluate()
+      unless $scope.resetting
+        $scope.$apply ->
+          $scope.model   = $scope.points_and_lines()
+          _evaluate()
 
     $scope.$watch 'answer', () ->
       # console.log 'watching answer'
       _evaluate()
 
+    $scope.reset = ->
+      $scope.resetting = true
+      _.each $scope.points, (p) -> $scope.removePoint(p.id).remove()
+      $scope.resetting = false
+      $timeout -> _update()
+
+    $scope.$watch 'settings', () ->
+      $scope.reset()
+
   ]
   link: (scope, element, attrs) ->
+
+    ######## Attributes #############
+
     _touching = false
     _current_line = null
     _dragging = false
@@ -173,6 +187,9 @@ app.directive 'graphPaper', () ->
     height = parseInt attrs.height
     scope.padding = padding = 20
 
+    ######### End Attributes ########
+
+    ############## local methods ################
 
     _snap_to_grid = (x,y) ->
       x: Raphael.snapTo(gridSize, x-padding, gridSize/2) + padding
@@ -190,7 +207,6 @@ app.directive 'graphPaper', () ->
         xy = _get_x_y e
         _end_line(xy.x, xy.y)
       _current_line
-
 
     _end_line = (x,y) ->
       snapped = _snap_to_grid(x, y)
@@ -235,15 +251,6 @@ app.directive 'graphPaper', () ->
         else if scope.mode == 'deleting'
           scope.removePoint(e.currentTarget.raphaelid).remove()
 
-    element.find('.canvas').css
-      width:  padding*2+width+'px'
-      height: padding*2+height+'px'
-
-    paper  = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
-    glass  = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
-    points = paper.set()
-    scope.image_set = paper.set()
-
     _draw_background = ->
       set = paper.set()
       # horizontal lines
@@ -257,7 +264,7 @@ app.directive 'graphPaper', () ->
         stroke: '#ccccff'
         'stroke-width': '1'
       paper.rect(padding,padding,height,width).attr('stroke', '#000000')
-      
+
     _draw_images = ->
       scope.image_set.remove()
       scope.image_set.clear()
@@ -276,8 +283,11 @@ app.directive 'graphPaper', () ->
               image.x = this.attr('x')-padding
               image.y = this.attr('y')-padding
               scope.$emit 'changed'
+          else 
+            pimage.mouseup (e) -> _handle_click(e)
         img.src = image.path
 
+    
     _drawAxis = (origin = null, editing = false) ->
       if origin
         Y = origin.y+padding
@@ -356,33 +366,6 @@ app.directive 'graphPaper', () ->
       for lbl in [0..height/gridSize]
         (paper.text(padding/2, lbl*gridSize+padding, "#{lbl}").attr({fill: "#000", 'font-family': 'monospace'})) 
 
-    _draw_background()
-    scope.$watch 'settings.editing', ->
-      # console.log 'settings.editing'
-      if scope.settings.editing? and scope.settings.editing
-        _drawOuterLabels()    
-
-    scope.$watch 'settings.origin', ->
-      # console.log 'settings.origin'
-      if scope.settings.origin? && scope.settings.origin
-        _drawAxis(scope.settings.origin, scope.settings.editing)
-      else
-        if scope.axis?
-          scope.axis.remove()
-          scope.axis.clear()
-          scope.labels.remove()
-          scope.labels.clear()
-          if scope.settings.editing
-            scope.circ.remove()
-
-    scope.$watch 'settings.images', ->
-      # console.log 'settings.images'
-      if scope.settings.images and scope.settings.images.length != scope.image_set.length
-        _draw_images() 
-
-    scope.$on 'images_changed', ->
-      _draw_images()
-      
     _get_x_y = (e) ->
       position = $('.canvas', element).offset()
       if TouchEvent? && (e instanceof TouchEvent)
@@ -390,10 +373,13 @@ app.directive 'graphPaper', () ->
       x: e.pageX - position.left
       y: e.pageY - position.top
 
+    _handle_click = (e) ->
+      xy = _get_x_y e
+      if scope.mode == 'lining'
+        _mouseup e
+      else if scope.mode == 'pointing'
+        point = _create_point(xy.x,xy.y)
 
-    glass.drag (e) ->
-      if scope.mode == 'lining' and _current_line?
-        _dragging = true
 
     _mouseup = (e) ->
       xy = _get_x_y(e)
@@ -403,6 +389,57 @@ app.directive 'graphPaper', () ->
         _end_line(xy.x, xy.y)
       else if (TouchEvent?) && !_current_line?
         _start_line(xy.x, xy.y)
+
+    ############## end local methods ############
+
+    ############## Setup ########################
+
+    element.find('.canvas').css
+      width:  padding*2+width+'px'
+      height: padding*2+height+'px'
+
+    paper           = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
+    glass           = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
+    scope.image_set = paper.set()
+    points          = paper.set()
+
+    _draw_background()
+
+    ############## End Setup ####################
+
+    ######### Events ####################
+
+    scope.$watch 'settings.editing', ->
+      # console.log 'settings.editing'
+
+      if scope.settings? && scope.settings.editing? and scope.settings.editing
+        _drawOuterLabels()    
+
+    scope.$watch 'settings.origin', ->
+      # console.log 'settings.origin'
+      if scope.settings?
+        if scope.settings.origin? && scope.settings.origin
+          _drawAxis(scope.settings.origin, scope.settings.editing)
+        else
+          if scope.axis?
+            scope.axis.remove()
+            scope.axis.clear()
+            scope.labels.remove()
+            scope.labels.clear()
+            if scope.settings.editing
+              scope.circ.remove()
+
+    scope.$watch 'settings.images', ->
+      # console.log 'settings.images'
+      if scope.settings? && scope.settings.images and scope.settings.images.length != scope.image_set.length
+        _draw_images() 
+
+    scope.$on 'images_changed', ->
+      _draw_images()
+      
+    glass.drag (e) ->
+      if scope.mode == 'lining' and _current_line?
+        _dragging = true
 
     glass.mousedown (e) ->
       if Touch? && (e instanceof Touch)
@@ -414,11 +451,7 @@ app.directive 'graphPaper', () ->
             _start_line(xy.x, xy.y)
 
     glass.mouseup (e) ->
-      xy = _get_x_y e
-      if scope.mode == 'lining'
-        _mouseup e
-      else if scope.mode == 'pointing'
-        point = _create_point(xy.x,xy.y)
+      _handle_click(e)
 
     glass.mousemove (e) ->
       if Touch? && (e instanceof Touch)
@@ -429,5 +462,6 @@ app.directive 'graphPaper', () ->
           _dragging = true
           snapped = _snap_to_grid(xy.x, xy.y)
           _current_line.dragging(snapped.x, snapped.y)
-    # console.log glass.click()
-    # console.log 'at end'
+
+    ####### End Events ##################
+]
