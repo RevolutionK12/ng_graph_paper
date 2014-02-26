@@ -185,7 +185,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     gridSize = 25
     width  = parseInt attrs.width
     height = parseInt attrs.height
-    scope.padding = padding = 20
+    scope.padding = padding = if (scope.settings? and scope.settings.editing?) then 20 else 4
 
     ######### End Attributes ########
 
@@ -285,6 +285,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
               scope.$emit 'changed'
           else 
             pimage.mouseup (e) -> _handle_click(e)
+            pimage.mousemove (e) -> _handle_mouse_move(e)
         img.src = image.path
 
     
@@ -380,6 +381,15 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       else if scope.mode == 'pointing'
         point = _create_point(xy.x,xy.y)
 
+    _handle_mouse_move = (e) ->
+      if Touch? && (e instanceof Touch)
+        return
+      else
+        xy = _get_x_y e
+        if scope.mode == 'lining' and _current_line?
+          _dragging = true
+          snapped = _snap_to_grid(xy.x, xy.y)
+          _current_line.dragging(snapped.x, snapped.y)
 
     _mouseup = (e) ->
       xy = _get_x_y(e)
@@ -389,6 +399,16 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
         _end_line(xy.x, xy.y)
       else if (TouchEvent?) && !_current_line?
         _start_line(xy.x, xy.y)
+
+    _resetAxis = () ->
+      if scope.axis? 
+        scope.axis.remove()
+        scope.axis.clear()
+      if scope.labels?
+        scope.labels.remove()
+        scope.labels.clear()
+      if scope.settings.editing
+        scope.circ.remove()
 
     ############## end local methods ############
 
@@ -419,15 +439,11 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       # console.log 'settings.origin'
       if scope.settings?
         if scope.settings.origin? && scope.settings.origin
+          _resetAxis()
           _drawAxis(scope.settings.origin, scope.settings.editing)
         else
           if scope.axis?
-            scope.axis.remove()
-            scope.axis.clear()
-            scope.labels.remove()
-            scope.labels.clear()
-            if scope.settings.editing
-              scope.circ.remove()
+            _resetAxis()
 
     scope.$watch 'settings.images', ->
       # console.log 'settings.images'
@@ -440,6 +456,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     glass.drag (e) ->
       if scope.mode == 'lining' and _current_line?
         _dragging = true
+
 
     glass.mousedown (e) ->
       if Touch? && (e instanceof Touch)
@@ -454,14 +471,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       _handle_click(e)
 
     glass.mousemove (e) ->
-      if Touch? && (e instanceof Touch)
-        return
-      else
-        xy = _get_x_y e
-        if scope.mode == 'lining' and _current_line?
-          _dragging = true
-          snapped = _snap_to_grid(xy.x, xy.y)
-          _current_line.dragging(snapped.x, snapped.y)
+      _handle_mouse_move(e)
 
     ####### End Events ##################
 ]
