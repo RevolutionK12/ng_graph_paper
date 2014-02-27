@@ -446,8 +446,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
             _resetAxis()
 
     scope.$watch 'settings.images', ->
-      # console.log 'settings.images'
-      if scope.settings? && scope.settings.images and scope.settings.images.length != scope.image_set.length
+      if scope.settings? && scope.settings.images
         _draw_images() 
 
     scope.$on 'images_changed', ->
