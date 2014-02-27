@@ -9,9 +9,11 @@ app.filter 'cursor', () ->
         'default'
 
 class Line 
-  constructor: (startx, starty, @paper) ->
+  constructor: (startx, starty, @paper, @set) ->
     @p1 = @paper.circle(startx, starty, 5).attr({fill: '#ff0000', stroke: 'none'})
     @p2 = @paper.circle(startx+6, starty+6, 5).attr({fill: '#ff0000', stroke: 'none'})
+    @set.push @p1
+    @set.push @p2
     @updatePath()
     _by_id = []
     _by_id[@p1.id] = @p1
@@ -29,6 +31,7 @@ class Line
       @path.attr path: @path_string()
     else
       @path = @paper.path(@path_string()).attr({stroke:'#ff0000', 'stroke-width': 1})
+      @set.push @path
   movePoint: (p, x, y) ->
     p.attr({cx: x, cy: y}) 
     @updatePath()
@@ -166,9 +169,13 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
 
     $scope.reset = ->
       $scope.resetting = true
-      _.each $scope.points, (p) -> $scope.removePoint(p.id).remove()
+      _.each $scope.points, (p) -> if (p? and p.id) then $scope.removePoint(p.id).remove()
       $scope.resetting = false
-      $timeout -> _update()
+      $timeout -> 
+        _update()
+        $scope.points_lines.forEach (e) ->
+          e.remove()
+        $scope.points_lines.clear()
 
     $scope.$watch 'settings', () ->
       $scope.reset()
@@ -198,11 +205,12 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     _create_point = (x,y) ->
       snapped = _snap_to_grid(x,y)
       unless scope.findPoint(snapped.x, snapped.y)  
-        _register_actions scope.addPoint paper.circle(snapped.x, snapped.y, 5).attr({fill: '#ff0000', stroke: 'none'})
+        scope.points_lines.push(pt = paper.circle(snapped.x, snapped.y, 5).attr({fill: '#ff0000', stroke: 'none'}))
+        _register_actions scope.addPoint pt
 
     _start_line = (x,y) ->
       snapped       = _snap_to_grid(x, y)
-      _current_line = new Line(snapped.x, snapped.y, paper)
+      _current_line = new Line(snapped.x, snapped.y, paper, scope.points_lines)
       _current_line.p2.click (e) ->
         xy = _get_x_y e
         _end_line(xy.x, xy.y)
@@ -418,10 +426,10 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       width:  padding*2+width+'px'
       height: padding*2+height+'px'
 
-    paper           = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
-    glass           = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
-    scope.image_set = paper.set()
-    points          = paper.set()
+    paper              = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
+    glass              = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
+    scope.image_set    = paper.set()
+    scope.points_lines = paper.set()
 
     _draw_background()
 
