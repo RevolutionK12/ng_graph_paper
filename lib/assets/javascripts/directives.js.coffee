@@ -280,26 +280,27 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       scope.image_set.remove()
       scope.image_set.clear()
       for image in scope.settings.images
-        img = new Image()
-        img.onload = ->
-          pimage = paper.image img.src, image.x+padding or padding, image.y+padding or padding, img.width, img.height
-          scope.image_set.push(pimage)
-          if scope.settings.editing
-            pimage.drag (dx, dy) ->
-              this.attr x: this.x+dx, y: this.y+dy
-            , ->
-              this.x = this.attr('x')
-              this.y = this.attr('y')
-            , ->
-              image.x = this.attr('x')-padding
-              image.y = this.attr('y')-padding
-              scope.$emit 'changed'
-          else 
-            pimage.mouseup (e) -> _handle_click(e)
-            pimage.mousemove (e) -> _handle_mouse_move(e)
-        img.src = image.path
+        do (image, img = new Image()) ->
+          img.onload = ->
+            console.log(this.src)
+            pimage = paper.image this.src, image.x+padding or padding, image.y+padding or padding, this.width, this.height
+            scope.image_set.push(pimage)
+            if scope.settings.editing
+              pimage.drag (dx, dy) ->
+                this.attr x: this.x+dx, y: this.y+dy
+              , ->
+                this.x = this.attr('x')
+                this.y = this.attr('y')
+              , ->
+                image.x = this.attr('x')-padding
+                image.y = this.attr('y')-padding
+                scope.$emit 'changed'
+            else 
+              pimage.mouseup (e) -> _handle_click(e)
+              pimage.mousemove (e) -> _handle_mouse_move(e)
+          img.src = image.path
+      return
 
-    
     _drawAxis = (origin = null, editing = false) ->
       if origin
         Y = origin.y+padding
