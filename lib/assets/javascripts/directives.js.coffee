@@ -192,7 +192,10 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     gridSize = 25
     width  = parseInt attrs.width
     height = parseInt attrs.height
-    scope.padding = padding = if (scope.settings? and scope.settings.editing?) then 20 else 4
+    scope.padding = padding = 4
+    setup = false
+    paper = null
+    glass = null
 
     ######### End Attributes ########
 
@@ -415,27 +418,38 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       if scope.labels?
         scope.labels.remove()
         scope.labels.clear()
-      if scope.settings.editing
+      if scope.settings.editing && scope.circ?
         scope.circ.remove()
 
     ############## end local methods ############
 
     ############## Setup ########################
 
-    element.find('.canvas').css
-      width:  padding*2+width+'px'
-      height: padding*2+height+'px'
 
-    paper              = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
-    glass              = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
-    scope.image_set    = paper.set()
-    scope.points_lines = paper.set()
 
-    _draw_background()
+    _setup = () ->
+      if setup then return
+      scope.padding = padding = if (scope.settings? and scope.settings.editing?) then 20 else 4
+      element.find('.canvas').css
+        width:  padding*2+width+'px'
+        height: padding*2+height+'px'
+
+      paper              = new Raphael(element.find('.canvas')[0], (padding*2)+width, (padding*2)+height)
+      glass              = paper.rect(padding,padding,height,width).attr('stroke': 'none').attr('fill', 'white')
+      scope.image_set    = paper.set()
+      scope.points_lines = paper.set()
+      _draw_background()
+      _setup_events()
+      setup = true
+
 
     ############## End Setup ####################
 
     ######### Events ####################
+
+    scope.$watch 'settings', (nv, ov) ->
+      if Object.keys(nv).length > 0
+        _setup()
 
     scope.$watch 'settings.editing', ->
       # console.log 'settings.editing'
@@ -459,26 +473,26 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
 
     scope.$on 'images_changed', ->
       _draw_images()
-      
-    glass.drag (e) ->
-      if scope.mode == 'lining' and _current_line?
-        _dragging = true
 
+    _setup_events = ->
+      glass.drag (e) ->
+        if scope.mode == 'lining' and _current_line?
+          _dragging = true
 
-    glass.mousedown (e) ->
-      if Touch? && (e instanceof Touch)
-        return
-      else
-        xy = _get_x_y e
-        if scope.mode == 'lining'
-          unless _current_line?
-            _start_line(xy.x, xy.y)
+      glass.mousedown (e) ->
+        if Touch? && (e instanceof Touch)
+          return
+        else
+          xy = _get_x_y e
+          if scope.mode == 'lining'
+            unless _current_line?
+              _start_line(xy.x, xy.y)
 
-    glass.mouseup (e) ->
-      _handle_click(e)
+      glass.mouseup (e) ->
+        _handle_click(e)
 
-    glass.mousemove (e) ->
-      _handle_mouse_move(e)
+      glass.mousemove (e) ->
+        _handle_mouse_move(e)
 
     ####### End Events ##################
 ]
