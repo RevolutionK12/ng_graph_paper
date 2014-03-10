@@ -5,6 +5,8 @@ app.filter 'cursor', () ->
     if input?
       if _.contains(['pointing', 'lining'], input)
         'pointer'
+      else if input == 'deleting'
+        'crosshair'
       else
         'default'
 
