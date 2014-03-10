@@ -254,7 +254,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
         _mousedown(e)
 
       point.mouseup (e) ->
-        if disabled then return
+        if scope.disabled then return
         if scope.mode == 'lining'
           _mouseup e
         else if scope.mode == 'deleting'
