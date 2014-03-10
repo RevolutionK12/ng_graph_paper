@@ -154,7 +154,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
           a = gp.evaluateAnswer($scope.answer)
           a
         catch error
-          console.log error
+          # console.log error
           false
 
     _update = ->
@@ -282,7 +282,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       for image in scope.settings.images
         do (image, img = new Image()) ->
           img.onload = ->
-            console.log(this.src)
+            # console.log(this.src)
             pimage = paper.image this.src, image.x+padding or padding, image.y+padding or padding, this.width, this.height
             scope.image_set.push(pimage)
             if scope.settings.editing
@@ -296,8 +296,9 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
                 image.y = this.attr('y')-padding
                 scope.$emit 'changed'
             else 
-              pimage.mouseup (e) -> _handle_click(e)
+              pimage.mouseup   (e) -> _handle_click(e)
               pimage.mousemove (e) -> _handle_mouse_move(e)
+              pimage.mousedown (e) -> _mousedown(e)
           img.src = image.path
       return
 
@@ -387,7 +388,10 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       y: e.pageY - position.top
 
     _handle_click = (e) ->
+      # console.log 'click!', scope.mode
+
       xy = _get_x_y e
+      # console.log 'xy', xy
       if scope.mode == 'lining'
         _mouseup e
       else if scope.mode == 'pointing'
@@ -411,6 +415,15 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
         _end_line(xy.x, xy.y)
       else if (TouchEvent?) && !_current_line?
         _start_line(xy.x, xy.y)
+
+    _mousedown = (e) ->
+      if Touch? && (e instanceof Touch)
+          return
+        else
+          xy = _get_x_y e
+          if scope.mode == 'lining'
+            unless _current_line?
+              _start_line(xy.x, xy.y)
 
     _resetAxis = () ->
       if scope.axis? 
@@ -481,13 +494,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
           _dragging = true
 
       glass.mousedown (e) ->
-        if Touch? && (e instanceof Touch)
-          return
-        else
-          xy = _get_x_y e
-          if scope.mode == 'lining'
-            unless _current_line?
-              _start_line(xy.x, xy.y)
+        _mousedown(e)
 
       glass.mouseup (e) ->
         _handle_click(e)
