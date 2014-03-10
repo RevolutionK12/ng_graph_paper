@@ -53,15 +53,15 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     'settings' : '='
     'model'    : '='
     'correct'  : '='
+    'disabled' : '=isdisabled'
   template: 
     """
       <div>
         <div class='header' ng-hide='settings.editing'>
-          <a class="btn btn-small" ng-click='cursor()' ng-class="{active: mode=='cursor'}"><i class="icon-arrow-left"></i> Pointer </a>
-          <a class="btn btn-small" ng-click="toggleDeleteTool()" ng-class="{active: mode=='deleting'}"><i class="icon-remove"></i> Delete</a>
-          <a class="btn btn-small" ng-click="togglePointTool()" ng-class="{active: mode=='pointing'}"><i class="icon-hand-up"></i> Point Tool</a>
-          <a class="btn btn-small" ng-click="toggleLineTool()" ng-class="{active: mode=='lining'}"><i class="icon-minus"></i> Line Tool</a>
-          <a class="btn btn-small" ng-click="reset()"> Reset</a>
+          <a class="btn btn-small" ng-click='cursor()' ng-class="{active: mode=='cursor'}"><i class="icon-arrow-left" ng-disabled='disabled'></i> Pointer </a>
+          <a class="btn btn-small" ng-click="toggleDeleteTool()" ng-class="{active: mode=='deleting'}" ng-disabled='disabled'><i class="icon-remove"></i> Delete</a>
+          <a class="btn btn-small" ng-click="togglePointTool()" ng-class="{active: mode=='pointing'}" ng-disabled='disabled'><i class="icon-hand-up"></i> Point Tool</a>
+          <a class="btn btn-small" ng-click="toggleLineTool()" ng-class="{active: mode=='lining'}" ng-disabled='disabled'><i class="icon-minus"></i> Line Tool</a>
         </div>
         <br />
         <div class="canvas" ng-style="{cursor: (mode|cursor)}" style=""></div>
@@ -251,14 +251,10 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       point.unmousedown()
       # point.unclick()
       point.mousedown (e) ->
-        if Touch? && (e instanceof Touch)
-          return
-        else
-          xy = _get_x_y e
-          if scope.mode == 'lining'
-            _start_line xy.x, xy.y
+        _mousedown(e)
 
       point.mouseup (e) ->
+        if disabled then return
         if scope.mode == 'lining'
           _mouseup e
         else if scope.mode == 'deleting'
@@ -390,16 +386,17 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       y: e.pageY - position.top
 
     _handle_click = (e) ->
-      # console.log 'click!', scope.mode
-
+      if scope.disabled == true
+        return
       xy = _get_x_y e
-      # console.log 'xy', xy
       if scope.mode == 'lining'
         _mouseup e
       else if scope.mode == 'pointing'
         point = _create_point(xy.x,xy.y)
 
     _handle_mouse_move = (e) ->
+      if scope.disabled == true
+        return
       if Touch? && (e instanceof Touch)
         return
       else
@@ -410,6 +407,8 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
           _current_line.dragging(snapped.x, snapped.y)
 
     _mouseup = (e) ->
+      if scope.disabled == true
+        return
       xy = _get_x_y(e)
       if _current_line? && _dragging
         _end_line(xy.x, xy.y)
@@ -419,6 +418,8 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
         _start_line(xy.x, xy.y)
 
     _mousedown = (e) ->
+      if scope.disabled == true
+        return
       if Touch? && (e instanceof Touch)
           return
         else
