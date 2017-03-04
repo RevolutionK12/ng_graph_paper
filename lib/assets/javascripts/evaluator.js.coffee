@@ -2,7 +2,6 @@
 @GraphPaper.Evaluator = class Evaluator
 
   constructor: (graph_paper_data) ->
-    
     data = JSON.parse(graph_paper_data)
     @lines    = data.lines
     @points   = data.points
@@ -36,28 +35,28 @@
       else if line.p1[0] == line.p2[0]
         'undefined'
       else
-        (line.p1[1] - line.p2[1]) / (line.p1[0] - line.p2[0])
+        (line.p1[1] - line.p2[1]) / (line.p2[0] - line.p1[0])
     sl
 
   distance: (line) ->
-      Math.sqrt(Math.pow(line.p1[0] - line.p2[0], 2) + Math.pow(line.p1[1] - line.p2[1],2)) / @gridSize
+    Math.sqrt(Math.pow(line.p1[0] - line.p2[0], 2) + Math.pow(line.p1[1] - line.p2[1],2)) / @gridSize
 
   isTriangle: ->
-      @lines.length == 3 and @points.length == 3
+    @lines.length == 3 and @points.length == 3
 
   isRightTriangle: ->
-      @isTriangle() and (
-        (Math.abs((Math.pow(@distance(@l1),2) + Math.pow(@distance(@l2),2)) - Math.pow(@distance(@l3),2)) < 0.000001)
-      )
+    @isTriangle() and (
+      (Math.abs((Math.pow(@distance(@l1),2) + Math.pow(@distance(@l2),2)) - Math.pow(@distance(@l3),2)) < 0.000001)
+    )
 
   areaOfTriangle: ->
-      Math.abs(((@p1[0]*(@p2[1] - @p3[1])) + (@p2[0]*(@p3[1]-@p1[1])) + @p3[0]*(@p1[1]-@p2[1]))/2) / (@gridSize*@gridSize)
+    Math.abs(((@p1[0]*(@p2[1] - @p3[1])) + (@p2[0]*(@p3[1]-@p1[1])) + @p3[0]*(@p1[1]-@p2[1]))/2) / (@gridSize*@gridSize)
 
   isPolygon: (sides) ->
     @lines.length = sides and @points.length == sides
 
   findPoint: (x,y) ->
-    #this will be adjusted based on gridsize so that the user doesn't ahve to do that calc
+    #this will be adjusted based on gridsize so that the user doesn't have to do that calc
     id = "#{x*@gridSize}_#{y*@gridSize}"
     (_.find @points, (p) -> p.id == id)?
 
@@ -65,16 +64,15 @@
     if @isPolygon(4)
       _.all [@p1, @p2, @p3, @p4], (p) ->
         corner = @linesByPoint[p.id]
-        (@slope(corner[0]) == 'undefined' and @slope(corner[1]) == 0) or 
+        (@slope(corner[0]) == 'undefined' and @slope(corner[1]) == 0) or
           (@slope(corner[0]) == 0 and @slope(corner[1]) == 'undefined') or
-            (@slope(corner[0]) == (-1/@slope(corner[1]))) 
+            (@slope(corner[0]) == (-1/@slope(corner[1])))
       , this
     else
       false
 
   evaluateAnswer: (answer) ->
-    # console.log "in evaluate"
-    isTriangle      = () => 
+    isTriangle      = () =>
       @isTriangle()
     isRightTriangle = () =>
       @isRightTriangle()
@@ -86,7 +84,7 @@
       @areaOfTriangle(args)
     isRectangle = () =>
       @isRectangle()
-    isPolygon = (args) => 
+    isPolygon = (args) =>
       @isPolygon(args)
     findPoint = (x,y) =>
       @findPoint(x,y)

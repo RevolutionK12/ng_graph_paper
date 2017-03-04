@@ -10,7 +10,7 @@ app.filter 'cursor', () ->
       else
         'default'
 
-class Line 
+class Line
   constructor: (startx, starty, @paper, @set) ->
     @p1 = @paper.circle(startx, starty, 5).attr({fill: '#ff0000', stroke: 'none'})
     @p2 = @paper.circle(startx+6, starty+6, 5).attr({fill: '#ff0000', stroke: 'none'})
@@ -26,7 +26,7 @@ class Line
   dragging: (x,y) ->
     @p2.attr({cx: x, cy: y})
     @updatePath()
-  path_string: -> 
+  path_string: ->
     "M #{@p1.attrs.cx} #{@p1.attrs.cy} L #{@p2.attrs.cx} #{@p2.attrs.cy}"
   updatePath: ->
     if @path
@@ -35,7 +35,7 @@ class Line
       @path = @paper.path(@path_string()).attr({stroke:'#ff0000', 'stroke-width': 1})
       @set.push @path
   movePoint: (p, x, y) ->
-    p.attr({cx: x, cy: y}) 
+    p.attr({cx: x, cy: y})
     @updatePath()
   length: () ->
     Math.sqrt(Math.pow(@p1.attrs.cx - @p2.attrs.cx, 2) + Math.pow(@p1.attrs.cy - @p2.attrs.cy,2))
@@ -46,7 +46,7 @@ class Line
 
 app.directive 'graphPaper', ['$timeout', ($timeout) ->
   restrict: 'A'
-  scope: 
+  scope:
     'width'    : '@'
     'height'   : '@'
     'answer'   : '='
@@ -54,7 +54,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     'model'    : '='
     'correct'  : '='
     'disabled' : '=isdisabled'
-  template: 
+  template:
     """
       <div>
         <div class='header' ng-hide='settings.editing'>
@@ -70,7 +70,6 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     """
   replace: true
   controller: [ "$scope", "$element", "$attrs", ($scope, $element, $attrs) ->
-
     $scope.points = []
     $scope.lines  = []
 
@@ -87,7 +86,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       p = $scope.points[p_id]
       $scope.points[p_id] = null
       if (values = _.filter($scope.lines, (l) -> l.findByPoint(p))).length > 0
-        _.each values, (v) -> 
+        _.each values, (v) ->
           v.remove()
           $scope.lines = _.without($scope.lines, v)
       _update()
@@ -150,7 +149,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       "{\"lines\":#{_lines_to_s()},\"points\":#{_points_to_s()}, \"gridSize\":25}"
 
     _evaluate = ->
-      $scope.correct = 
+      $scope.correct =
         try
           gp = new GraphPaper.Evaluator($scope.points_and_lines())
           a = gp.evaluateAnswer($scope.answer)
@@ -173,7 +172,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       $scope.resetting = true
       _.each $scope.points, (p) -> if (p? and p.id) then $scope.removePoint(p.id).remove()
       $scope.resetting = false
-      $timeout -> 
+      $timeout ->
         _update()
         $scope.points_lines.forEach (e) ->
           e.remove()
@@ -209,7 +208,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
 
     _create_point = (x,y) ->
       snapped = _snap_to_grid(x,y)
-      unless scope.findPoint(snapped.x, snapped.y)  
+      unless scope.findPoint(snapped.x, snapped.y)
         scope.points_lines.push(pt = paper.circle(snapped.x, snapped.y, 5).attr({fill: '#ff0000', stroke: 'none'}))
         _register_actions scope.addPoint pt
 
@@ -293,7 +292,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
                 image.x = this.attr('x')-padding
                 image.y = this.attr('y')-padding
                 scope.$emit 'changed'
-            else 
+            else
               pimage.mouseup   (e) -> _handle_click(e)
               pimage.mousemove (e) -> _handle_mouse_move(e)
               pimage.mousedown (e) -> _mousedown(e)
@@ -306,7 +305,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
         X = origin.x+padding
       else
         Y = height/gridSize/2*gridSize + padding
-        X = width/gridSize/2*gridSize  + padding 
+        X = width/gridSize/2*gridSize  + padding
         scope.settings.origin = x: X-padding, y: Y-padding
       scope.axis = lines = paper.set()
       _vert_path = (X) -> "M #{X} #{padding} L #{X} #{width+padding}"
@@ -317,12 +316,12 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       lines.attr
         stroke: '#000000'
         'stroke-width': '2'
-      
+
       _cart_move = (dx, dy) ->
         this.attr({cx: nx = (this.dsx + dx), cy: ny = (this.dsy + dy)});
 
       _cart_up = ->
-        snap = _snap_to_grid this.attr('cx'), this.attr('cy') 
+        snap = _snap_to_grid this.attr('cx'), this.attr('cy')
         X = snap.x
         Y = snap.y
         vert.attr path: _vert_path(X)
@@ -368,15 +367,15 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
             scope.labels.push paper.text(origin.x+padding+15, lbl*gridSize+padding, "#{(-1)*(lbl-adjy)}")
             scope.labels.push paper.path "M #{origin.x+padding} #{lbl*gridSize+padding} L #{origin.x + padding + 5} #{lbl*gridSize+padding}"
 
-        scope.labels.attr({fill: "#000", 'font-family': 'monospace', 'font-size': 12}) 
+        scope.labels.attr({fill: "#000", 'font-family': 'monospace', 'font-size': 12})
 
       _draw_labels(scope.settings.origin)
 
     _drawOuterLabels = ->
       for lbl in [0..width/gridSize]
-        (paper.text(lbl*gridSize+padding, padding/2, "#{lbl}").attr({fill: "#000", 'font-family': 'monospace'})) 
+        (paper.text(lbl*gridSize+padding, padding/2, "#{lbl}").attr({fill: "#000", 'font-family': 'monospace'}))
       for lbl in [0..height/gridSize]
-        (paper.text(padding/2, lbl*gridSize+padding, "#{lbl}").attr({fill: "#000", 'font-family': 'monospace'})) 
+        (paper.text(padding/2, lbl*gridSize+padding, "#{lbl}").attr({fill: "#000", 'font-family': 'monospace'}))
 
     _get_x_y = (e) ->
       position = $('.canvas', element).offset()
@@ -412,7 +411,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       xy = _get_x_y(e)
       if _current_line? && _dragging
         _end_line(xy.x, xy.y)
-      else if (TouchEvent?) && _current_line? 
+      else if (TouchEvent?) && _current_line?
         _end_line(xy.x, xy.y)
       else if (TouchEvent?) && !_current_line?
         _start_line(xy.x, xy.y)
@@ -429,7 +428,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
               _start_line(xy.x, xy.y)
 
     _resetAxis = () ->
-      if scope.axis? 
+      if scope.axis?
         scope.axis.remove()
         scope.axis.clear()
       if scope.labels?
@@ -472,7 +471,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       # console.log 'settings.editing'
 
       if scope.settings? && scope.settings.editing? and scope.settings.editing
-        _drawOuterLabels()    
+        _drawOuterLabels()
 
     scope.$watch 'settings.origin', ->
       # console.log 'settings.origin'
@@ -486,7 +485,7 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
 
     scope.$watch 'settings.images', ->
       if scope.settings? && scope.settings.images
-        _draw_images() 
+        _draw_images()
 
     scope.$on 'images_changed', ->
       _draw_images()
