@@ -70,7 +70,6 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
     """
   replace: true
   controller: [ "$scope", "$element", "$attrs", ($scope, $element, $attrs) ->
-    console.log('here')
     $scope.points = []
     $scope.lines  = []
 
@@ -301,8 +300,6 @@ app.directive 'graphPaper', ['$timeout', ($timeout) ->
       return
 
     _drawAxis = (origin = null, editing = false) ->
-      console.log(height)
-      console.log(width)
       if origin
         Y = origin.y+padding
         X = origin.x+padding
